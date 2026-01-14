@@ -19,6 +19,7 @@
 		<title> Авторизация </title>
 		
 		<script src="https://code.jquery.com/jquery-1.8.3.js"></script>
+		<script src="https://www.google.com/recaptcha/api.js?render=6Lekb0osAAAAAJlsZo32pEoHos6q35LIzJSek3v0"></script>
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
@@ -63,44 +64,57 @@
 				
 				var _login = document.getElementsByName("_login")[0].value;
 				var _password = document.getElementsByName("_password")[0].value;
+
+				if (!_login || !_password) {
+					alert("Заполните логин и пароль");
+					return;
+				}
+
 				loading.style.display = "block";
 				button.className = "button_diactive";
-				
-				var data = new FormData();
-				data.append("login", _login);
-				data.append("password", _password);
-				
-				// AJAX запрос
-				$.ajax({
-					url         : 'ajax/login_user.php',
-					type        : 'POST', // важно!
-					data        : data,
-					cache       : false,
-					dataType    : 'html',
-					// отключаем обработку передаваемых данных, пусть передаются как есть
-					processData : false,
-					// отключаем установку заголовка типа запроса. Так jQuery скажет серверу что это строковой запрос
-					contentType : false, 
-					// функция успешного ответа сервера
-					success: function (_data) {
-						console.log("Авторизация прошла успешно, id: " +_data);
-						if(_data == "") {
-							loading.style.display = "none";
-							button.className = "button";
-							alert("Логин или пароль не верный.");
-						} else {
-							localStorage.setItem("token", _data);
-							location.reload();
-							loading.style.display = "none";
-							button.className = "button";
-						}
-					},
-					// функция ошибки
-					error: function( ){
-						console.log('Системная ошибка!');
-						loading.style.display = "none";
-						button.className = "button";
-					}
+
+				grecaptcha.ready(function() {
+					grecaptcha.execute('6Lekb0osAAAAAJlsZo32pEoHos6q35LIzJSek3v0', {action: 'login'})
+					.then(function(token) {
+						var data = new FormData();
+						data.append("login", _login);
+						data.append("password", _password);
+						data.append("g-recaptcha-response", token);
+
+						console.log("Отправляю токен:", token);
+						console.log("Данные формы:", {
+							login: _login,
+							password: _password,
+							"g-recaptcha-response": token
+						});
+
+						$.ajax({
+							url: 'ajax/login_user.php',
+							type: 'POST',
+							data: data,
+							cache: false,
+							dataType: 'html',
+							processData: false,
+							contentType: false,
+							success: function (_data) {
+								console.log("Авторизация прошла успешно, id: " + _data);
+								if (_data.trim() === "" || _data.includes("ошибка")) {
+									loading.style.display = "none";
+									button.className = "button";
+									alert("Логин, пароль или проверка безопасности неверны.");
+								} else {
+									localStorage.setItem("token", _data);
+									//location.reload();
+								}
+							},
+							error: function() {
+								console.log('Системная ошибка!');
+								loading.style.display = "none";
+								button.className = "button";
+								alert("Ошибка подключения к серверу.");
+							}
+						});
+					});
 				});
 			}
 			
