@@ -19,6 +19,7 @@
 		<title> Регистрация </title>
 		
 		<script src="https://code.jquery.com/jquery-1.8.3.js"></script>
+		<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
@@ -44,6 +45,8 @@
 					<div class = "sub-name">Повторите пароль:</div>
 					<input name="_passwordCopy" type="password" placeholder="" onkeypress="return PressToEnter(event)"/>
 					
+					<div class="center" style="text-align: center;"><div class="g-recaptcha" data-sitekey="6LelY0osAAAAAOzxDuUKqCqP9uyUnBsQiOi3GzHm"></div></div>
+
 					<a href="login.php">Вернуться</a>
 					<input type="button" class="button" value="Зайти" onclick="RegIn()" style="margin-top: 0px;"/>
 					<img src = "img/loading.gif" class="loading" style="margin-top: 0px;"/>
@@ -69,6 +72,14 @@
 				if(_login != "") {
 					if(_password != "") {
 						if(_password == _passwordCopy) {
+
+							var captcha = grecaptcha.getResponse();
+							if (captcha.length) {
+								let Data = new FormData();
+								Data.append('g-recaptcha-response', captcha);
+								Ajax("url", Data, SignIn);
+							}
+
 							loading.style.display = "block";
 							button.className = "button_diactive";
 							
