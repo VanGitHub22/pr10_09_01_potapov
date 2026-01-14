@@ -74,10 +74,9 @@
 						if(_password == _passwordCopy) {
 
 							var captcha = grecaptcha.getResponse();
-							if (captcha.length) {
-								let Data = new FormData();
-								Data.append('g-recaptcha-response', captcha);
-								Ajax("url", Data, SignIn);
+							if (captcha.length == 0) {
+								alert("Пройдите капчу")
+								return
 							}
 
 							loading.style.display = "block";
@@ -86,6 +85,7 @@
 							var data = new FormData();
 							data.append("login", _login);
 							data.append("password", _password);
+							data.append("g-recaptcha-response", captcha);
 							
 							// AJAX запрос
 							$.ajax({
